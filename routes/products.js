@@ -44,7 +44,7 @@ router.post('/', (req, res) => {
     description,
     code,
     price,
-    status: true, // Status por defecto es true
+    status: true, // Por defecto segun la consigna, el producto esta activo
     stock,
     category
   };
