@@ -16,3 +16,20 @@ carrito.json
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Handlebars cache
+views/**/*.handlebars
+
+# Socket.io debug files
+debug.log
+
+# IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+tmp/
+temp/
+
