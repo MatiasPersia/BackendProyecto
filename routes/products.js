@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const router = express.Router();
+const { io } = require('../index'); // Importar io desde index.js
 
 const productsFilePath = './productos.json';
 
@@ -13,6 +14,7 @@ const readProducts = () => {
 // Escribir productos en el archivo
 const writeProducts = (products) => {
   fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
+  io.emit('updateProducts', products); // Emitir evento de actualización
 };
 
 // Ruta raíz GET / para listar todos los productos
@@ -44,7 +46,7 @@ router.post('/', (req, res) => {
     description,
     code,
     price,
-    status: true, // Por defecto segun la consigna, el producto esta activo
+    status: true, // Por defecto según la consigna, el producto está activo
     stock,
     category
   };
