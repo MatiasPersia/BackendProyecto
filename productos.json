@@ -14,8 +14,8 @@
     "title": "Hola",
     "description": "",
     "code": "0242",
-    "price": "2000",
-    "stock": "1",
+    "price": 2000,
+    "stock": 1,
     "category": "TV",
     "status": true
   }

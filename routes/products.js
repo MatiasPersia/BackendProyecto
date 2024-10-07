@@ -1,87 +1,61 @@
 const express = require('express');
-const fs = require('fs');
+const Product = require('../models/Product'); // Asegúrate de que la ruta sea correcta
 const router = express.Router();
-const { io } = require('../index'); // Importar io desde index.js
 
-const productsFilePath = './productos.json';
+// Obtener todos los productos con filtros y paginación
+router.get('/', async (req, res) => {
+    try {
+        const { limit = 10, page = 1, sort, query } = req.query;
 
-// Leer productos desde el archivo
-const readProducts = () => {
-  const data = fs.readFileSync(productsFilePath, 'utf-8');
-  return JSON.parse(data);
-};
+        const options = {
+            limit: parseInt(limit),
+            skip: (page - 1) * limit,
+            sort: sort === 'asc' ? { price: 1 } : sort === 'desc' ? { price: -1 } : {},
+        };
 
-// Escribir productos en el archivo
-const writeProducts = (products) => {
-  fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
-  io.emit('updateProducts', products); // Emitir evento de actualización
-};
+        const products = await Product.find(query ? { category: query } : {}).sort(options.sort).limit(options.limit).skip(options.skip);
+        const totalProducts = await Product.countDocuments(query ? { category: query } : {});
+        const totalPages = Math.ceil(totalProducts / limit);
 
-// Ruta raíz GET / para listar todos los productos
-router.get('/', (req, res) => {
-  const products = readProducts();
-  const limit = req.query.limit ? parseInt(req.query.limit) : products.length;
-  res.json(products.slice(0, limit));
+        res.json({
+            status: 'success',
+            payload: products,
+            totalPages,
+            prevPage: page > 1 ? page - 1 : null,
+            nextPage: page < totalPages ? page + 1 : null,
+            page: parseInt(page),
+            hasPrevPage: page > 1,
+            hasNextPage: page < totalPages,
+            prevLink: page > 1 ? `/api/products?page=${page - 1}&limit=${limit}` : null,
+            nextLink: page < totalPages ? `/api/products?page=${page + 1}&limit=${limit}` : null,
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
 });
 
-// Ruta GET /:pid para obtener un producto por ID
-router.get('/:pid', (req, res) => {
-  const products = readProducts();
-  const productId = parseInt(req.params.pid);
-  const product = products.find(p => p.id === productId);
-  if (product) {
-    res.json(product);
-  } else {
-    res.status(404).send('Producto no encontrado');
-  }
+// Crear un nuevo producto
+router.post('/', async (req, res) => {
+    try {
+        const newProduct = new Product(req.body);
+        await newProduct.save();
+        res.status(201).json({ status: 'success', payload: newProduct });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
 });
 
-// Ruta raíz POST / para agregar un nuevo producto
-router.post('/', (req, res) => {
-  const products = readProducts();
-  const { title, description, code, price, stock, category } = req.body;
-  const newProduct = {
-    id: products.length > 0 ? products[products.length - 1].id + 1 : 1,
-    title,
-    description,
-    code,
-    price,
-    status: true, // Por defecto según la consigna, el producto está activo
-    stock,
-    category
-  };
-  products.push(newProduct);
-  writeProducts(products);
-  res.status(201).json(newProduct);
-});
-
-// Ruta PUT /:pid para actualizar un producto por ID
-router.put('/:pid', (req, res) => {
-  const products = readProducts();
-  const productId = parseInt(req.params.pid);
-  const productIndex = products.findIndex(p => p.id === productId);
-  if (productIndex !== -1) {
-    const updatedProduct = { ...products[productIndex], ...req.body, id: productId };
-    products[productIndex] = updatedProduct;
-    writeProducts(products);
-    res.json(updatedProduct);
-  } else {
-    res.status(404).send('Producto no encontrado');
-  }
-});
-
-// Ruta DELETE /:pid para eliminar un producto por ID
-router.delete('/:pid', (req, res) => {
-  const products = readProducts();
-  const productId = parseInt(req.params.pid);
-  const productIndex = products.findIndex(p => p.id === productId);
-  if (productIndex !== -1) {
-    products.splice(productIndex, 1);
-    writeProducts(products);
-    res.status(204).send();
-  } else {
-    res.status(404).send('Producto no encontrado');
-  }
+// Obtener un producto específico
+router.get('/:pid', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.pid);
+        if (!product) {
+            return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+        }
+        res.json({ status: 'success', payload: product });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
 });
 
 module.exports = router;

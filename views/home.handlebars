@@ -1,15 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Home</title>
+    <meta charset="UTF-8">
+    <title>Lista de Productos</title>
 </head>
 <body>
-  <h1>Lista de Productos</h1>
-  <ul>
-    {{#each products}}
-      <li>{{this.title}} - {{this.price}}</li>
-    {{/each}}
-  </ul>
+    <h1>Lista de Productos</h1>
+    <ul>
+        {{#each products}}
+            <li>
+                {{this.title}} - {{this.price}} 
+                <a href="/api/products/{{this._id}}">Ver Detalles</a>
+                <form action="/api/carts/:cid/products/{{this._id}}" method="POST">
+                    <input type="number" name="quantity" min="1" placeholder="Cantidad" required>
+                    <button type="submit">Agregar al Carrito</button>
+                </form>
+            </li>
+        {{/each}}
+    </ul>
+
+    <div>
+        {{#if currentPage}}
+            {{#if (eq currentPage 1)}}
+                {{!-- Si está en la primera página, no muestra el botón "Anterior" --}}
+            {{else}}
+                <a href="/api/products?page={{subtract currentPage 1}}">Anterior</a>
+            {{/if}}
+        {{/if}}
+
+        {{#if currentPage}}
+            {{#if (eq currentPage totalPages)}}
+                {{!-- Si está en la última página, no muestra el botón "Siguiente" --}}
+            {{else}}
+                <a href="/api/products?page={{add currentPage 1}}">Siguiente</a>
+            {{/if}}
+        {{/if}}
+    </div>
 </body>
 </html>

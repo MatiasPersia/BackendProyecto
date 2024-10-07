@@ -18,7 +18,7 @@ carrito.json
 Thumbs.db
 
 # Handlebars cache
-views/**/*.handlebars
+# views/**/*.handlebars
 
 # Socket.io debug files
 debug.log

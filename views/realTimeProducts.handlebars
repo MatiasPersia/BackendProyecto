@@ -17,6 +17,7 @@
       });
     });
 
+    // Agregar producto
     const addProduct = () => {
       const title = document.getElementById('title').value;
       const description = document.getElementById('description').value;
@@ -26,11 +27,53 @@
       const category = document.getElementById('category').value;
 
       socket.emit('addProduct', { title, description, code, price, stock, category });
+      displayMessage('Producto agregado correctamente.');
     };
 
+    // Eliminar producto
     const deleteProduct = () => {
       const productId = document.getElementById('productId').value;
       socket.emit('deleteProduct', productId);
+      displayMessage('Producto eliminado correctamente.');
+    };
+
+    // Actualizar cantidad de un producto en el carrito
+    const updateProductQuantity = () => {
+      const cartId = document.getElementById('cartId').value;
+      const productId = document.getElementById('cartProductId').value;
+      const quantity = document.getElementById('quantity').value;
+
+      fetch(`/api/carts/${cartId}/products/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ quantity })
+      })
+      .then(response => response.json())
+      .then(data => displayMessage('Cantidad del producto actualizada correctamente.'))
+      .catch(error => displayMessage('Error al actualizar la cantidad del producto.'));
+    };
+
+    // Eliminar todos los productos del carrito
+    const deleteAllProductsFromCart = () => {
+      const cartId = document.getElementById('cartIdForDeletion').value;
+
+      fetch(`/api/carts/${cartId}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(data => displayMessage('Todos los productos del carrito fueron eliminados.'))
+      .catch(error => displayMessage('Error al eliminar los productos del carrito.'));
+    };
+
+    // Función para mostrar mensajes
+    const displayMessage = (message) => {
+      const messageBox = document.getElementById('messageBox');
+      messageBox.textContent = message;
+      setTimeout(() => {
+        messageBox.textContent = '';
+      }, 3000); // El mensaje se oculta después de 3 segundos
     };
   </script>
 </head>
@@ -54,5 +97,17 @@
   <h2>Eliminar Producto</h2>
   <input type="number" id="productId" placeholder="ID del Producto">
   <button onclick="deleteProduct()">Eliminar</button>
+
+  <h2>Actualizar Cantidad de Producto en Carrito</h2>
+  <input type="number" id="cartId" placeholder="ID del Carrito">
+  <input type="number" id="cartProductId" placeholder="ID del Producto">
+  <input type="number" id="quantity" placeholder="Nueva Cantidad">
+  <button onclick="updateProductQuantity()">Actualizar Cantidad</button>
+
+  <h2>Eliminar Todos los Productos del Carrito</h2>
+  <input type="number" id="cartIdForDeletion" placeholder="ID del Carrito">
+  <button onclick="deleteAllProductsFromCart()">Eliminar Todos los Productos</button>
+
+  <div id="messageBox" style="color: green; font-weight: bold; margin-top: 20px;"></div>
 </body>
 </html>
